@@ -32,11 +32,6 @@ The contract includes several gas optimizations and security features to enhance
    - **Why it’s important**: Directly checking the existence of an item in a mapping is much cheaper than iterating through an array, especially for large data sets.
    - **How it improves gas usage**: This reduces the computational cost associated with vote validation, particularly as the number of movies in the poll increases.
 
-4. **Reentrancy Guard**:
-   - **What was done**: A `noReentrancy` modifier is added to critical functions like `vote` and `endVoting`.
-   - **Why it’s important**: Reentrancy attacks can exploit functions that make external calls before updating their internal state. This can lead to critical vulnerabilities and fund losses.
-   - **How it improves contract security**: By preventing a function from being re-entered before its previous execution is complete, the contract is protected from this common attack vector, thus enhancing its overall security.
-
 ## What's in the Repository
 
 - **`MovieVoting.sol`**: The smart contract file containing all the logic for voting.

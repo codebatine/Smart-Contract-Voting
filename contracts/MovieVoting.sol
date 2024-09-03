@@ -2,38 +2,32 @@
 pragma solidity ^0.8.26;
 
 contract MovieVoting {
-    // Enum to represent voting state
     enum VotingState {
         NotStarted,
         Ongoing,
         Finished
     }
 
-    // Struct to represent a movie poll
     struct Poll {
         address creator;
         string[] movies;
-        mapping(string => bool) movieExists; // New mapping to check movie existence
+        mapping(string => bool) movieExists;
         VotingState state;
         uint endTime;
         string winningMovie;
     }
 
-    // Mapping to store all polls by their ID
     mapping(uint => Poll) private polls;
-    mapping(uint => mapping(string => uint)) private pollVotes; // Votes for each movie in a poll
-    mapping(uint => mapping(address => bool)) private pollHasVoted; // Voting status of each address
+    mapping(uint => mapping(string => uint)) private pollVotes;
+    mapping(uint => mapping(address => bool)) private pollHasVoted;
     uint private pollCount;
-    bool private locked; // State variable for reentrancy guard
 
-    // Custom errors
     error PollNotFound(uint pollId);
     error VotingNotStarted(uint pollId);
     error VotingPeriodEnded(uint pollId);
     error AlreadyVoted(uint pollId);
     error InvalidMovie(uint pollId, string movie);
 
-    // Events
     event PollCreated(
         uint pollId,
         address creator,
@@ -43,7 +37,6 @@ contract MovieVoting {
     event VoteCast(uint pollId, address voter, string movie);
     event VotingEnded(uint pollId, string winningMovie);
 
-    // Modifiers
     modifier onlyPollCreator(uint pollId) {
         if (msg.sender != polls[pollId].creator)
             revert("Only poll creator can perform this action");
@@ -61,29 +54,18 @@ contract MovieVoting {
         _;
     }
 
-    // Reentrancy guard modifier
-    modifier noReentrancy() {
-        require(!locked, "Reentrancy is not allowed");
-        locked = true;
-        _;
-        locked = false;
-    }
-
     constructor() {
         pollCount = 0;
     }
 
-    // Receive function to accept Ether
     receive() external payable {}
 
-    // Fallback function
     fallback() external payable {
         revert("Invalid call");
     }
 
-    // Function to create a new poll
     function createPoll(
-        string[] memory _movies, // Use memory to handle dynamic arrays
+        string[] memory _movies,
         uint _votingDuration
     ) external {
         require(_movies.length > 1, "At least two movies required");
@@ -94,7 +76,6 @@ contract MovieVoting {
         newPoll.state = VotingState.NotStarted;
         newPoll.endTime = block.timestamp + _votingDuration;
 
-        // Optimization 3: Use mapping to quickly check movie existence
         for (uint i = 0; i < _movies.length; i++) {
             newPoll.movieExists[_movies[i]] = true;
         }
@@ -103,7 +84,6 @@ contract MovieVoting {
         pollCount++;
     }
 
-    // Function to start voting for a poll
     function startVoting(
         uint pollId
     ) external pollExists(pollId) onlyPollCreator(pollId) {
@@ -115,11 +95,10 @@ contract MovieVoting {
         poll.state = VotingState.Ongoing;
     }
 
-    // Function to cast a vote
     function vote(
         uint pollId,
         string memory movie
-    ) external pollExists(pollId) votingOngoing(pollId) noReentrancy {
+    ) external pollExists(pollId) votingOngoing(pollId) {
         if (pollHasVoted[pollId][msg.sender]) revert AlreadyVoted(pollId);
 
         Poll storage poll = polls[pollId];
@@ -134,10 +113,9 @@ contract MovieVoting {
         emit VoteCast(pollId, msg.sender, movie);
     }
 
-    // Function to end voting and determine the winner
     function endVoting(
         uint pollId
-    ) external pollExists(pollId) onlyPollCreator(pollId) noReentrancy {
+    ) external pollExists(pollId) onlyPollCreator(pollId) {
         Poll storage poll = polls[pollId];
         require(
             poll.state == VotingState.Ongoing,
@@ -146,12 +124,11 @@ contract MovieVoting {
         require(block.timestamp >= poll.endTime, "Voting period is not over");
 
         poll.state = VotingState.Finished;
-        assert(poll.state == VotingState.Finished); // Assert to ensure state has been updated correctly
+        assert(poll.state == VotingState.Finished);
 
         string memory winningMovie = "";
         uint highestVotes = 0;
 
-        // Optimization 1: Use memory instead of storage to optimize gas
         string[] memory movies = poll.movies;
 
         for (uint i = 0; i < movies.length; ++i) {
@@ -165,7 +142,6 @@ contract MovieVoting {
         emit VotingEnded(pollId, winningMovie);
     }
 
-    // Function to get the winner of a poll
     function getWinningMovie(
         uint pollId
     ) external view pollExists(pollId) returns (string memory) {
@@ -174,7 +150,6 @@ contract MovieVoting {
         return poll.winningMovie;
     }
 
-    // Function to get the end time of a poll
     function getPollEndTime(
         uint pollId
     ) external view pollExists(pollId) returns (uint) {
