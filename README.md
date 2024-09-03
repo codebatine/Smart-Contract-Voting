@@ -78,3 +78,7 @@ Before deploying, configure your deployment settings (network, private keys, etc
 ```
 npx hardhat run scripts/deploy.js --network yourNetwork
 ```
+
+# Test Results
+
+![Hardhat Coverage](img/hardhat-coverage.jpg)
