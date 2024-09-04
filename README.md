@@ -71,6 +71,10 @@ To ensure everything is working correctly and to see the test coverage, run:
 npx hardhat test
 ```
 
+# Test Results
+
+![Hardhat Coverage](img/hardhat-coverage.jpg)
+
 # Deploy the contract:
 
 Before deploying, configure your deployment settings (network, private keys, etc.) in hardhat.config.js, then deploy:
@@ -82,7 +86,3 @@ npx hardhat run scripts/deploy.js --network yourNetwork
 ## Link to contract
 
 [Link to contract on Etherscan](https://sepolia.etherscan.io/address/0x4D616D7c038c192fC7BCAFA1a1d037B2540F199e#code)
-
-# Test Results
-
-![Hardhat Coverage](img/hardhat-coverage.jpg)
